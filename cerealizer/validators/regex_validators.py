@@ -86,8 +86,11 @@ url_regex = re.compile(  # noqa: W605
 )
 
 
+def is_valid_sha1(sha1: str) -> bool:
+    result = url_regex.match(sha1)
+    return True if result else False
+
+
 def is_valid_url(url: str):
     result = url_regex.match(url)
-    if result:
-        return True
-    return False
+    return True if result else False

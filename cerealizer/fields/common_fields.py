@@ -6,23 +6,34 @@ from cerealizer.validators.regex_validators import is_valid_url
 
 class PositiveInteger(ValidatedField):
 
-    def validate(self, instance, value):
+    def __init__(self, many=False):
+        super().__init__()
+        self.many = many
+
+    def _validate_one(self, value):
         if not isinstance(value, int):
             raise ValueError('value must be an integer')
         if value <= 0:
             raise ValueError('value must be > 0')
         return value
 
+    def validate(self, instance, value):
+        if self.many:
+            return self._validate_many(value)
+        return self._validate_one(value)
+
 
 class StringField(ValidatedField):
 
-    def __init__(self, allow_none: bool=False, empty: bool=False, max_length: Union[None, int]=None):
+    def __init__(self, allow_none: bool=False, empty: bool=False, max_length: Union[None, int]=None,
+                 many=False):
         super().__init__()
         self.allow_none = allow_none
         self.allow_empty = empty
         self.max_length = max_length
+        self.many = many
 
-    def validate(self, instance, value):
+    def _validate_one(self, value):
         if value is None and self.allow_none:
             return value
         if not isinstance(value, str):
@@ -32,15 +43,21 @@ class StringField(ValidatedField):
                 raise ValueError('value must be shorter than {} chars'.format(self.max_length))
         return value
 
+    def validate(self, instance, value):
+        if self.many:
+            return self._validate_many(value)
+        return self._validate_one(value)
+
 
 class URLField(ValidatedField):
 
-    def __init__(self, allow_none: bool=False, empty: bool=False):
+    def __init__(self, allow_none: bool=False, empty: bool=False, many=False):
         super().__init__()
         self.allow_none = allow_none
         self.empty = empty
+        self.many = many
 
-    def validate(self, instance, value):
+    def _validate_one(self, value):
         if self.allow_none and value is None:
             return value
         if self.empty and value == '':
@@ -52,15 +69,7 @@ class URLField(ValidatedField):
             raise ValueError('invalid url: {}'.format(value))
         return value
 
-
-class ManyField(ValidatedField):
-
-    def __init__(self, field):
-        super().__init__()
-        self.field = field()
-
     def validate(self, instance, value):
-        vals = []
-        for i in value:
-            vals.append(self.field.validate(instance, i))
-        return vals
+        if self.many:
+            return self._validate_many(value)
+        return self._validate_one(value)

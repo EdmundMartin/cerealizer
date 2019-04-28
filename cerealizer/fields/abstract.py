@@ -28,5 +28,15 @@ class ValidatedField(abc.ABC, AutoStorage):
         super().__set__(instance, value)
 
     @abc.abstractmethod
+    def _validate_one(self, value):
+        pass
+
+    def _validate_many(self, values):
+        results = []
+        for i in values:
+            results.append(self._validate_one(i))
+        return results
+
+    @abc.abstractmethod
     def validate(self, instance, value):
         """return validated value or raise ValueErrror"""
